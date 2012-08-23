@@ -15,9 +15,9 @@
 #include "memrev.h"
 
 #include <cstddef>
-#include <cstdint>
 #include <cstring>
 #include <cstdlib>
+#include <stdint.h>
 
 #define UNREACHABLE() __builtin_unreachable()
 
