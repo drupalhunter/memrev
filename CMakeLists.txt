@@ -17,8 +17,5 @@ project(rev)
 
 add_subdirectory(memrev)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-add_executable(rev main.cc)
+add_executable(rev rev.cc)
 target_link_libraries(rev memrev)
-
-add_executable(bench bench.cc)
-target_link_libraries(bench memrev)
