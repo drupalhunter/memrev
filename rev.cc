@@ -42,7 +42,7 @@ void fatal(const char* msg, ...) {
 }
 
 void print_reversed_lines(FILE* file, const char* filename) {
-    const size_t kBlockSize = 4096 - 32 + 1;
+    const size_t kBlockSize = 4096 - 2 * MEMREV_VECTOR_SIZE + 1;
     while (!feof(file)) {
         struct mem_block_rlist<char>* block_list = NULL;
         size_t block_length;
@@ -55,7 +55,7 @@ void print_reversed_lines(FILE* file, const char* filename) {
             block_list = new struct mem_block_rlist<char>;
             block_list->prev = prev_block_list;
 
-            char* block = new char[kBlockSize];
+            char alignas(MEMREV_VECTOR_SIZE) *block = new char[kBlockSize];
             if (!fgets(block, kBlockSize, file)) {
                 if (feof(file)) {
                     // If we hit EOF without reading anything, just force this

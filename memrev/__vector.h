@@ -23,11 +23,12 @@ extern "C" {
 #include <stddef.h>
 #include <stdint.h>
 
-#define SIMD_WIDTH 16
-typedef uint8_t  Vector8  __attribute__((vector_size(SIMD_WIDTH)));
-typedef uint16_t Vector16 __attribute__((vector_size(SIMD_WIDTH)));
-typedef uint32_t Vector32 __attribute__((vector_size(SIMD_WIDTH)));
-typedef uint64_t Vector64 __attribute__((vector_size(SIMD_WIDTH)));
+#include "memrev.h"
+
+typedef uint8_t  Vector8  __attribute__((vector_size(MEMREV_VECTOR_SIZE)));
+typedef uint16_t Vector16 __attribute__((vector_size(MEMREV_VECTOR_SIZE)));
+typedef uint32_t Vector32 __attribute__((vector_size(MEMREV_VECTOR_SIZE)));
+typedef uint64_t Vector64 __attribute__((vector_size(MEMREV_VECTOR_SIZE)));
 
 #define REVERSE_MASK_8  15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0
 #define REVERSE_MASK_16 7, 6, 5, 4, 3, 2, 1, 0

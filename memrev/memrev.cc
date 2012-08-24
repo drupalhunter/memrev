@@ -25,22 +25,36 @@ using namespace std;
 
 namespace {
 
-#ifdef USE_VECTOR
-#include "__vector.h"
+/// Reverses the order of the first \a count units of \a data using a simple
+/// swap algorithm.
+template<typename T>
+void Reverse(T* data, size_t count) {
+    T* data_end = data + count;
+    for (size_t i = 0; i < count / 2; i++) {
+        T e = data[i];
+        data[i] = data_end[-1 - i];
+        data_end[-1 - i] = e;
+    }
+}
 
 /// Returns a pointer whose integer value is the largest multiple of
-/// \a boundary less than or equal to \a ptr.
+/// alignof(T) less than or equal to \a ptr.
 template<typename T>
-inline T* AlignBack(const void* ptr, size_t boundary) {
-    return (T*) (((uintptr_t) ptr / boundary) * boundary);
+inline T* AlignBack(const void* ptr) {
+    const size_t alignment = alignof(T);
+    return (T*) (((uintptr_t) ptr / alignment) * alignment);
 }
 
 /// Returns a pointer whose integer value is the smallest multiple of
-/// \a boundary greater than or equal to \a ptr.
+/// alignof(T) greater than or equal to \a ptr.
 template<typename T>
-inline T* AlignFront(const void* ptr, size_t boundary) {
-    return (T*) ((((uintptr_t) ptr + boundary - 1) / boundary) * boundary);
+inline T* AlignFront(const void* ptr) {
+    const size_t alignment = alignof(T);
+    return (T*) ((((uintptr_t) ptr + alignment - 1) / alignment) * alignment);
 }
+
+#ifdef USE_VECTOR
+#include "__vector.h"
 
 /// Returns a copy of \a vec with the units reversed.
 template<typename Unit, typename Vector>
@@ -85,77 +99,66 @@ void ShiftMiddleAndSwapSides(char* data, size_t data_length,
         delete [] sides_temp;
     }
 }
-#endif // USE_VECTOR
 
-/// Reverses the order of the first \a count units of \a data using a simple
-/// swap algorithm.
-template<typename T>
-void Reverse(T* data, size_t count) {
-    T* data_end = data + count;
-    for (size_t i = 0; i < count / 2; i++) {
-        T e = data[i];
-        data[i] = data_end[-1 - i];
-        data_end[-1 - i] = e;
-    }
-}
-
-#ifdef USE_VECTOR
 template<typename Vector, typename T>
-#else
-template<typename T>
-#endif
-T* MemrevImpl(T* data, size_t count) {
-    size_t remaining_units = count;
-
-#ifdef USE_VECTOR
-    const size_t kMinVectorBytes = 0;
-    // First, we need to find a subset of the array with 16-byte-aligned bounds
-    // and a length that is a multiple of 32 bytes.
-    Vector* vector_start = AlignFront<Vector>(data, SIMD_WIDTH);
-    Vector* vector_end = AlignBack<Vector>(&data[count], SIMD_WIDTH);
-    ptrdiff_t total_vector_bytes =
-            (uintptr_t) vector_end - (uintptr_t) vector_start;
-    if (total_vector_bytes % (2 * SIMD_WIDTH) != 0) {
-        total_vector_bytes -= SIMD_WIDTH;
-        vector_end = (Vector*) (((char*) vector_end) - SIMD_WIDTH);
+void MemrevImpl(T* data, size_t count) {
+    // First, we need to find a subset of the array with SIMD-aligned bounds
+    // and a length that is a multiple of twice the SIMD register width.
+    Vector* vector_start = AlignFront<Vector>(data);
+    Vector* vector_end = AlignBack<Vector>(&data[count]);
+    ptrdiff_t total_vectors = vector_end - vector_start;
+    if (total_vectors % 2) {
+        total_vectors--;
+        vector_end--;
     }
-    if (total_vector_bytes > kMinVectorBytes) {
-        // We've found a suitable and sufficiently large subset.
-        // Do the actual swapping.
-        for (size_t i = 0; i < total_vector_bytes / (2 * SIMD_WIDTH); i++) {
-            Vector v = ReverseVector<T>(vector_start[i]);
-            vector_start[i] = ReverseVector<T>(vector_end[-1 - i]);
-            vector_end[-1 - i] = v;
-        }
 
-        // Our subset of the array is now reversed. But:
-        //  (a) There may be unreversed bytes at the beginning and/or end.
-        //  (b) The reversed subset may need shifting to its final position.
-        // Take care of both of these at once.
-        // Note: |remaining_end_length| refers to the number of unreversed
-        // bytes that will *end up* at the end of the array, not the ones that
-        // are currently at the end (likewise for |remaining_start_length|).
-        size_t total_bytes = count * sizeof(T);
-        size_t remaining_end_length =
-                (uintptr_t) vector_start - (uintptr_t) data;
-        size_t remaining_start_length =
-                total_bytes - total_vector_bytes - remaining_end_length;
-        ShiftMiddleAndSwapSides((char*) data, total_bytes,
-                                remaining_end_length, remaining_start_length);
-
-        // Reverse the end.
-        size_t remaining_end_count = remaining_end_length / sizeof(T);
-        if (remaining_end_count > 0)
-            Reverse(&data[count - remaining_end_count], remaining_end_count);
-        remaining_units = remaining_start_length / sizeof(T);
+    // Only use vector acceleration if
+    //  (1) we have a large enough array for it to make a difference, and
+    //  (2) the vector region is aligned with |data|
+    const size_t kMinVectors = 2;
+    size_t vector_offset = (uintptr_t) vector_start - (uintptr_t) data;
+    if (total_vectors < kMinVectors || vector_offset % sizeof(T) != 0) {
+        Reverse(data, count);
+        return;
     }
-#endif
 
-    // Reverse the remaining units.
-    if (remaining_units > 0)
-        Reverse(data, remaining_units);
-    return data;
+    // We've found a suitable subset. Do the actual swapping.
+    for (size_t i = 0; i < total_vectors / 2; i++) {
+        Vector v = ReverseVector<T>(vector_start[i]);
+        vector_start[i] = ReverseVector<T>(vector_end[-1 - i]);
+        vector_end[-1 - i] = v;
+    }
+
+    // Our subset of the array is now reversed. But:
+    //  (a) There may be unreversed bytes at the beginning and/or end.
+    //  (b) The reversed subset may need shifting to its final position.
+    size_t vector_end_offset = (uintptr_t) &data[count] -
+                                (uintptr_t) vector_end;
+    ShiftMiddleAndSwapSides((char*) data, count * sizeof(T),
+                            vector_offset, vector_end_offset);
+
+    // Reverse the remaining start and end units. Note that after
+    // ShiftMiddleAndSwapSides(), |vector_offset| is the number of unreversed
+    // bytes at the *end* of the array.
+    Reverse(data, vector_end_offset / sizeof(T));
+    size_t remaining_end_units = vector_offset / sizeof(T);
+    Reverse(&data[count - remaining_end_units], remaining_end_units);
 }
+
+#define CALL_MEMREV_IMPL(WIDTH) \
+    MemrevImpl<Vector ## WIDTH>((uint ## WIDTH ##_t*) data, count)
+
+#else // USE_VECTOR
+
+template<typename T>
+void MemrevImpl(T* data, size_t count) {
+    Reverse(data, count);
+}
+
+#define CALL_MEMREV_IMPL(WIDTH) \
+    MemrevImpl((uint ## WIDTH ##_t*) data, count)
+
+#endif // USE_VECTOR
 
 } // namespace
 
@@ -163,28 +166,24 @@ char* strrev(char* str) {
     return (char*) memrev(str, 1, strlen(str));
 }
 
-void* memrev(void* data, int size, size_t count) {
-    const static int kMaxUnitSize = 8;
-    if (size <= 0 || size > kMaxUnitSize || size & (size - 1))
+void* memrev(void* data, size_t size, size_t count) {
+    const static size_t kMaxUnitSize = 8;
+    if (size == 0 || size > kMaxUnitSize || size & (size - 1))
         return NULL;
-
-#ifdef USE_VECTOR
-#define CALL_MEMREV_IMPL(WIDTH) \
-    MemrevImpl<Vector ## WIDTH>((uint ## WIDTH ##_t*) data, count);
-#else
-#define CALL_MEMREV_IMPL(WIDTH) \
-    MemrevImpl((uint ## WIDTH ##_t*) data, count);
-#endif
 
     switch (size) {
     case 1:
-        return CALL_MEMREV_IMPL(8);
+        CALL_MEMREV_IMPL(8);
+        break;
     case 2:
-        return CALL_MEMREV_IMPL(16);
+        CALL_MEMREV_IMPL(16);
+        break;
     case 4:
-        return CALL_MEMREV_IMPL(32);
+        CALL_MEMREV_IMPL(32);
+        break;
     case 8:
-        return CALL_MEMREV_IMPL(64);
+        CALL_MEMREV_IMPL(64);
+        break;
     }
-    UNREACHABLE();
+    return data;
 }

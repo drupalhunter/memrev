@@ -22,6 +22,8 @@ extern "C" {
 
 #include <stddef.h>
 
+#define MEMREV_VECTOR_SIZE 16
+
 /**
  * Reverses the order of the characters in @a str.
  *
@@ -42,7 +44,7 @@ char* strrev(char* str);
  * @param len The number of units to reverse.
  * @return A pointer to @a data, or NULL if @a size was invalid.
  */
-void* memrev(void* data, int size, size_t count);
+void* memrev(void* data, size_t size, size_t count);
 
 #ifdef __cplusplus
 }
