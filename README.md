@@ -41,5 +41,5 @@ Using
 The top-level project in this repository produces a binary, `rev`, that mimics
 the behavior of the `rev` utility in util-linux.
 
-The library itself is located in the `memrev` subfolder and can be compiled
+The library itself is located in the `libmemrev` subfolder and can be compiled
 separately.
