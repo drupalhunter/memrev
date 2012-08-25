@@ -145,27 +145,24 @@ void MemrevImpl(T* data, size_t count) {
     Reverse(&data[count - remaining_end_units], remaining_end_units);
 }
 
-#define CALL_MEMREV_IMPL(WIDTH) \
-    MemrevImpl<Vector ## WIDTH>((uint ## WIDTH ##_t*) data, count)
-
 #else // USE_VECTOR
 
 template<typename T>
 void MemrevImpl(T* data, size_t count) {
     Reverse(data, count);
 }
-
-#define CALL_MEMREV_IMPL(WIDTH) \
-    MemrevImpl((uint ## WIDTH ##_t*) data, count)
-
 #endif // USE_VECTOR
 
 } // namespace
 
 void* memrev_reverse(void* data, size_t size, size_t count) {
-    const static size_t kMaxUnitSize = 8;
-    if (size == 0 || size > kMaxUnitSize || size & (size - 1))
-        return NULL;
+#ifdef USE_VECTOR
+#define CALL_MEMREV_IMPL(WIDTH) \
+    MemrevImpl<Vector ## WIDTH>((uint ## WIDTH ##_t*) data, count)
+#else
+#define CALL_MEMREV_IMPL(WIDTH) \
+    MemrevImpl((uint ## WIDTH ##_t*) data, count)
+#endif
 
     switch (size) {
     case 1:
@@ -180,6 +177,8 @@ void* memrev_reverse(void* data, size_t size, size_t count) {
     case 8:
         CALL_MEMREV_IMPL(64);
         break;
+    default:
+        return NULL;
     }
     return data;
 }
