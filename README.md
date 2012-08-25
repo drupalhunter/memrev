@@ -39,7 +39,7 @@ If you want to build the tests, you need to do the following:
 Using
 -----
 The top-level project in this repository produces a binary, `rev`, that mimics
-the behavior of the `rev` utility in util-linux.
+the behavior of the `rev` utility in Unix.
 
 The library itself is located in the `libmemrev` subfolder and can be compiled
 separately.
