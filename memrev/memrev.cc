@@ -115,7 +115,7 @@ void MemrevImpl(T* data, size_t count) {
     // Only use vector acceleration if
     //  (1) we have a large enough array for it to make a difference, and
     //  (2) the vector region is aligned with |data|
-    const size_t kMinVectors = 2;
+    const ptrdiff_t kMinVectors = 2;
     size_t vector_offset = (uintptr_t) vector_start - (uintptr_t) data;
     if (total_vectors < kMinVectors || vector_offset % sizeof(T) != 0) {
         Reverse(data, count);
