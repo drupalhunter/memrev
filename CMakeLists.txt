@@ -15,7 +15,17 @@
 cmake_minimum_required(VERSION 2.6)
 project(rev)
 
-add_subdirectory(memrev)
+option (MEMREV_BUILD_TESTS
+        "Build the test executable(s)." OFF)
+
+if (MEMREV_BUILD_TESTS)
+    add_subdirectory(gtest)
+    include_directories(gtest/include)
+endif (MEMREV_BUILD_TESTS)
+
+add_subdirectory(libmemrev)
+
+include_directories(libmemrev/include)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 add_executable(rev rev.cc)
 target_link_libraries(rev memrev)

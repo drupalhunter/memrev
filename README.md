@@ -21,7 +21,7 @@ files for your system.
 **Note**: Vector acceleration is disabled by default. To enable it, you must do
 two things:
 
-1.  Pass `-DMEMREV_USE_VECTOR=ON` to cmake.
+1.  Pass `-DMEMREV_USE_VECTOR=ON` to CMake.
 2.  Explicitly tell the compiler that the target CPU supports vector
     instructions, e.g. via passing `-DCMAKE_CXX_FLAGS='-mssse3'` (or
     `-DCMAKE_CXX_FLAGS='-march=native'` if you are compiling for your
@@ -29,6 +29,12 @@ two things:
 
 Doing the first without doing the second will actually result in *slower* code
 than you'd get by disabling vector instructions altogether, so be careful!
+
+If you want to build the tests, you need to do the following:
+
+*   Extract the [gtest](http://code.google.com/p/googletest/) source tree into
+    a subdirectory of the memrev source tree named `gtest`.
+*   Pass `-DMEMREV_BUILD_TESTS=ON` to CMake.
 
 Using
 -----

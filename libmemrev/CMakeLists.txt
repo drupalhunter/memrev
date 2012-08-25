@@ -22,8 +22,14 @@ if (MEMREV_USE_VECTOR)
     add_definitions(-DUSE_VECTOR)
 endif (MEMREV_USE_VECTOR)
 
+include_directories(include)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-add_library (memrev memrev.cc)
+add_library (memrev src/memrev.cc)
+
+if (MEMREV_BUILD_TESTS)
+    add_executable(memrev_test src/memrev_test.cc)
+    target_link_libraries(memrev_test memrev gtest gtest_main)
+endif (MEMREV_BUILD_TESTS)
 
 install (TARGETS memrev DESTINATION lib)
-install (FILES memrev.h DESTINATION include)
+install (FILES include/memrev.h DESTINATION include)

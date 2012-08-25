@@ -18,7 +18,7 @@
 #include <cstring>
 #include <getopt.h>
 
-#include "memrev/memrev.h"
+#include "memrev.h"
 
 using namespace std;
 
