@@ -25,14 +25,6 @@ extern "C" {
 #define MEMREV_VECTOR_SIZE 16
 
 /**
- * Reverses the order of the characters in @a str.
- *
- * @param str The string to be reversed.
- * @return A pointer to @a str.
- */
-char* strrev(char* str);
-
-/**
  * Reverses the order of a block of memory.
  *
  * The memory block is treated as an array of length @a count containing ints
@@ -44,7 +36,7 @@ char* strrev(char* str);
  * @param len The number of units to reverse.
  * @return A pointer to @a data, or NULL if @a size was invalid.
  */
-void* memrev(void* data, size_t size, size_t count);
+void* memrev_reverse(void* data, size_t size, size_t count);
 
 #ifdef __cplusplus
 }

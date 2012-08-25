@@ -86,7 +86,7 @@ void print_reversed_lines(FILE* file, const char* filename) {
         // Print the line in reverse.
         while (block_list) {
             char* block = block_list->block_start;
-            memrev(block, 1, block_length);
+            memrev_reverse(block, 1, block_length);
             fwrite(block, 1, block_length, stdout);
 
             // Every block other than the last one (in input order) must be

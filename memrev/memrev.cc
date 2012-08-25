@@ -162,11 +162,7 @@ void MemrevImpl(T* data, size_t count) {
 
 } // namespace
 
-char* strrev(char* str) {
-    return (char*) memrev(str, 1, strlen(str));
-}
-
-void* memrev(void* data, size_t size, size_t count) {
+void* memrev_reverse(void* data, size_t size, size_t count) {
     const static size_t kMaxUnitSize = 8;
     if (size == 0 || size > kMaxUnitSize || size & (size - 1))
         return NULL;
