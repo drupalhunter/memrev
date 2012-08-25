@@ -200,4 +200,9 @@ TEST(memrev, ZeroLengthInput) {
     memrev_test<uint32_t>(0, 0);
 }
 
+TEST(memrev, InvalidSize) {
+    static char dummy[] = "dummy string";
+    EXPECT_EQ(NULL, memrev_reverse(dummy, 3, 2));
+}
+
 } // namespace
