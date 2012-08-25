@@ -13,7 +13,7 @@
 # limitations under the License.
 
 cmake_minimum_required(VERSION 2.6)
-project(rev)
+project(memrev)
 
 option (MEMREV_BUILD_TESTS
         "Build the test executable(s)." OFF)
