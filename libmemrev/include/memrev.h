@@ -30,6 +30,13 @@ extern "C" {
  * The memory block is treated as an array of length @a count containing ints
  * of size @size.
  *
+ * Performance note: When vector acceleration is enabled, this function can
+ * achieve much higher performance when the input bounds are aligned to the
+ * vector register width (exposed as the preprocessor macro
+ * MEMREV_VECTOR_SIZE). Specifically, the highest performance is achieved when
+ *  - @a data is aligned to MEMREV_VECTOR_SIZE, and
+ *  - @a count is a multiple of 2 * MEMREV_VECTOR_SIZE
+ *
  * @param data A pointer to the start of the area of memory to be reversed.
  * @param size The size of each unit of @a data, in bytes. Must be one of the
                following: 1, 2, 4, 8.
