@@ -12,119 +12,79 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <cstdarg>
-#include <cstdio>
 #include <cstdlib>
-#include <cstring>
+#include <fstream>
+#include <iostream>
+#include <locale>
+#include <string>
 #include <getopt.h>
 
 #include "memrev.h"
 
 using namespace std;
 
+#define FATAL(msg) { cerr << "rev: " << msg << endl; exit(EXIT_FAILURE); }
+
 namespace {
 
-/// A reversely-linked, singly-linked list of pointers to memory blocks.
-template<typename T>
-struct mem_block_rlist {
-    T* block_start;
-    struct mem_block_rlist* prev;
-};
+template<typename char_type>
+void write_reversed_lines(basic_istream<char_type>& input,
+                          const char* input_filename,
+                          basic_ostream<char_type>& output) {
+    while (true) {
+        basic_string<char_type> buffer;
+        getline(input, buffer);
+        if (input.bad())
+            FATAL("error reading from " << input_filename);
 
-void fatal(const char* msg, ...) {
-    va_list ap;
-    fprintf(stderr, "rev: fatal: ");
-    va_start(ap, msg);
-    vfprintf(stderr, msg, ap);
-    va_end(ap);
-    fprintf(stderr, "\n");
-    exit(EXIT_FAILURE);
-}
-
-void print_reversed_lines(FILE* file, const char* filename) {
-    const size_t kBlockSize = 4096 - 2 * MEMREV_VECTOR_SIZE + 1;
-    while (!feof(file)) {
-        struct mem_block_rlist<char>* block_list = NULL;
-        size_t block_length;
-        bool print_newline = true;
-
-        // Read a line out of the file and store it in an rlist of memory
-        // blocks of size kBlockSize.
-        for (;;) {
-            struct mem_block_rlist<char>* prev_block_list = block_list;
-            block_list = new struct mem_block_rlist<char>;
-            block_list->prev = prev_block_list;
-
-            char alignas(MEMREV_VECTOR_SIZE) *block = new char[kBlockSize];
-            if (!fgets(block, kBlockSize, file)) {
-                if (feof(file)) {
-                    // If we hit EOF without reading anything, just force this
-                    // block to be a zero-length string and let the machinery
-                    // below take care of the rest.
-                    block[0] = '\0';
-                } else {
-                    fatal("error reading from %s", filename);
-                }
-            }
-            block_list->block_start = block;
-            block_length = strlen(block);
-
-            if (block_length > 0 && block[block_length - 1] == '\n') {
-                // We use print_newline to remember whether to print a newline,
-                // so "forget" the trailing newline from this block.
-                block_length--;
-                break;
-            }
-            if (block_length < kBlockSize - 1) {
-                // We hit EOF without reading a newline, so don't print one
-                // later.
-                print_newline = false;
-                break;
-            }
-        }
-
-        // Print the line in reverse.
-        while (block_list) {
-            char* block = block_list->block_start;
-            memrev_reverse(block, 1, block_length);
-            fwrite(block, 1, block_length, stdout);
-
-            // Every block other than the last one (in input order) must be
-            // full; i.e. its size (including NUL) must be kBlockSize.
-            block_length = kBlockSize - 1;
-
-            delete [] block_list->block_start;
-            struct mem_block_rlist<char>* prev_block_list = block_list->prev;
-            delete block_list;
-            block_list = prev_block_list;
-        }
-
-        if (print_newline)
-            putchar('\n');
+        memrev_reverse(&buffer[0], sizeof(char_type), buffer.length());
+        output << buffer;
+        if (!input.eof())
+            output << endl;
+        else
+            break;
     }
 }
 
+template<typename char_type>
+void write_reversed_lines(const char* filename,
+                          basic_ostream<char_type>& output) {
+    basic_ifstream<char_type> file(filename);
+    if (file.fail())
+        FATAL("could not open file: " << filename);
+    write_reversed_lines(file, filename, output);
+    file.close();
+}
+
 void usage() {
-    fprintf(stderr,
+    cerr <<
 "usage: rev [options] [file ...]\n"
 "\n"
 "Options:\n"
-"  -h, --help   show this message and exit\n");
+"  -h, --help       show this message and exit\n"
+"  -W, --no-wchar   do not treat inputs as wide-character sources (faster)\n";
 }
 
 } // namespace
 
 int main(int argc, char** argv) {
+    locale::global(locale(""));
+
+    bool use_wchar = true;
     static const struct option long_options[] = {
         { "help", no_argument, NULL, 'h' },
+        { "no-wchar", no_argument, NULL, 'W' },
         { NULL, 0, NULL, 0 }
     };
     for (;;) {
-        int c = getopt_long(argc, argv, "h", long_options, NULL);
+        int c = getopt_long(argc, argv, "hW", long_options, NULL);
         if (c == -1)
             break;
 
         switch (c) {
+        case 'W':
+            use_wchar = false;
+            break;
         case 'h':
         default:
             usage();
@@ -135,14 +95,16 @@ int main(int argc, char** argv) {
     argc -= optind;
 
     if (argc == 0) {
-        print_reversed_lines(stdin, "stdin");
+        if (use_wchar)
+            write_reversed_lines(wcin, "stdin", wcout);
+        else
+            write_reversed_lines(cin, "stdin", cout);
     } else {
         for (int i = 0; i < argc; i++) {
-            FILE* file = fopen(argv[i], "r");
-            if (!file)
-                fatal("could not open file: %s", argv[i]);
-            print_reversed_lines(file, argv[i]);
-            fclose(file);
+            if (use_wchar)
+                write_reversed_lines(argv[i], wcout);
+            else
+                write_reversed_lines(argv[i], cout);
         }
     }
     return 0;
