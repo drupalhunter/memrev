@@ -34,15 +34,15 @@ void write_reversed_lines(basic_istream<char_type>& input,
     while (true) {
         basic_string<char_type> buffer;
         getline(input, buffer);
-        if (input.bad())
+        if (input.fail() && !input.eof())
             FATAL("error reading from " << input_filename);
 
         memrev_reverse(&buffer[0], sizeof(char_type), buffer.length());
         output << buffer;
-        if (!input.eof())
-            output << endl;
-        else
+
+        if (input.eof())
             break;
+        output << endl;
     }
 }
 
@@ -68,7 +68,10 @@ void usage() {
 } // namespace
 
 int main(int argc, char** argv) {
-    locale::global(locale(""));
+    locale user_locale("");
+    locale::global(user_locale);
+    wcin.imbue(user_locale);
+    wcout.imbue(user_locale);
 
     bool use_wchar = true;
     static const struct option long_options[] = {

@@ -13,19 +13,28 @@
 # limitations under the License.
 
 cmake_minimum_required(VERSION 2.6)
-project(memrev)
+project(memrev CXX)
 
 option (MEMREV_BUILD_TESTS
         "Build the test executable(s)." OFF)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+if (APPLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+endif()
+
 if (MEMREV_BUILD_TESTS)
+    if (APPLE)
+        add_definitions(-DGTEST_USE_OWN_TR1_TUPLE=1)
+    endif()
     add_subdirectory(gtest)
     include_directories(gtest/include)
-endif (MEMREV_BUILD_TESTS)
+endif()
 
 add_subdirectory(libmemrev)
 
 include_directories(libmemrev/include)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 add_executable(rev rev.cc)
 target_link_libraries(rev memrev)
+
+install(TARGETS rev DESTINATION bin)

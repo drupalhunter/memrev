@@ -12,24 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required (VERSION 2.6)
-project (libmemrev)
+cmake_minimum_required(VERSION 2.6)
+project(libmemrev CXX)
 
 option (MEMREV_USE_VECTOR
         "Use SIMD acceleration if possible." OFF)
 
 if (MEMREV_USE_VECTOR)
     add_definitions(-DUSE_VECTOR)
-endif (MEMREV_USE_VECTOR)
+endif()
 
 include_directories(include)
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 add_library (memrev src/memrev.cc)
 
 if (MEMREV_BUILD_TESTS)
     add_executable(memrev_test src/memrev_test.cc)
     target_link_libraries(memrev_test memrev gtest gtest_main)
-endif (MEMREV_BUILD_TESTS)
+endif()
 
-install (TARGETS memrev DESTINATION lib)
-install (FILES include/memrev.h DESTINATION include)
+install(TARGETS memrev DESTINATION lib)
+install(FILES include/memrev.h DESTINATION include)

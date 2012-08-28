@@ -16,8 +16,8 @@
 
 #include <cstddef>
 #include <cstring>
+#include <cstdint>
 #include <cstdlib>
-#include <stdint.h>
 
 #define UNREACHABLE() __builtin_unreachable()
 
