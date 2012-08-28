@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef REV_H_
-#define REV_H_
+#ifndef MEMREV_H_
+#define MEMREV_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -49,4 +49,4 @@ void* memrev_reverse(void* data, size_t size, size_t count);
 }
 #endif
 
-#endif /* REV_H_ */
+#endif /* MEMREV_H_ */

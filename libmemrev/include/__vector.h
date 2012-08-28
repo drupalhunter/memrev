@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef REV_VECTOR_H_
-#define REV_VECTOR_H_
+#ifndef MEMREV_VECTOR_H_
+#define MEMREV_VECTOR_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -69,4 +69,4 @@ REVERSE_VECTOR_FUNC(64);
 }
 #endif
 
-#endif /* REV_VECTOR_H_ */
+#endif /* MEMREV_VECTOR_H_ */
