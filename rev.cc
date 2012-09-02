@@ -16,6 +16,7 @@
 #include <fstream>
 #include <iostream>
 #include <locale>
+#include <stdexcept>
 #include <string>
 #include <getopt.h>
 
@@ -23,7 +24,11 @@
 
 using namespace std;
 
-#define FATAL(msg) { cerr << "rev: " << msg << endl; exit(EXIT_FAILURE); }
+#define FATAL(msg) \
+    { cerr << "rev: error: " << msg << endl; exit(EXIT_FAILURE); }
+
+#define WARNING(msg) \
+    { cerr << "rev: warning: " << msg << endl; }
 
 namespace {
 
@@ -56,6 +61,28 @@ void write_reversed_lines(const char* filename,
     file.close();
 }
 
+void set_global_locale() {
+    locale user_locale;
+    try {
+        user_locale = locale("");
+    } catch (runtime_error& e) {
+        WARNING("user-preferred locale is not usable");
+        WARNING("falling back to \"C\" locale");
+        return;
+    }
+    locale::global(user_locale);
+
+    // Imbue all of the standard streams with the new locale.
+    cin.imbue(user_locale);
+    cout.imbue(user_locale);
+    cerr.imbue(user_locale);
+    clog.imbue(user_locale);
+    wcin.imbue(user_locale);
+    wcout.imbue(user_locale);
+    wcerr.imbue(user_locale);
+    wclog.imbue(user_locale);
+}
+
 void usage() {
     cerr <<
 "usage: rev [options] [file ...]\n"
@@ -68,10 +95,7 @@ void usage() {
 } // namespace
 
 int main(int argc, char** argv) {
-    locale user_locale("");
-    locale::global(user_locale);
-    wcin.imbue(user_locale);
-    wcout.imbue(user_locale);
+    set_global_locale();
 
     bool use_wchar = true;
     static const struct option long_options[] = {
@@ -79,7 +103,7 @@ int main(int argc, char** argv) {
         { "no-wchar", no_argument, NULL, 'W' },
         { NULL, 0, NULL, 0 }
     };
-    for (;;) {
+    while (true) {
         int c = getopt_long(argc, argv, "hW", long_options, NULL);
         if (c == -1)
             break;
