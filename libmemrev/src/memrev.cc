@@ -56,22 +56,6 @@ inline T* AlignFront(const void* ptr) {
 #ifdef USE_VECTOR
 #include "__vector.h"
 
-/// Returns a copy of \a vec with the units reversed.
-template<typename Unit, typename Vector>
-inline Vector ReverseVector(const Vector& vec) {
-    switch (sizeof(Unit)) {
-    case 1:
-        return ReverseVector8(vec);
-    case 2:
-        return ReverseVector16(vec);
-    case 4:
-        return ReverseVector32(vec);
-    case 8:
-        return ReverseVector64(vec);
-    }
-    UNREACHABLE();
-}
-
 /// The intermediate stage of the vector reversal algorithm.
 /// (See MemrevImpl)
 void ShiftMiddleAndSwapSides(char* data, size_t data_length,
@@ -124,8 +108,8 @@ void MemrevImpl(T* data, size_t count) {
 
     // We've found a suitable subset. Do the actual swapping.
     for (size_t i = 0; i < total_vectors / 2; i++) {
-        Vector v = ReverseVector<T>(vector_start[i]);
-        vector_start[i] = ReverseVector<T>(vector_end[-1 - i]);
+        Vector v = ReverseVector(vector_start[i]);
+        vector_start[i] = ReverseVector(vector_end[-1 - i]);
         vector_end[-1 - i] = v;
     }
 

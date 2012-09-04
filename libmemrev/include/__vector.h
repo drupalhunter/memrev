@@ -39,7 +39,7 @@ typedef uint64_t Vector64 __attribute__((vector_size(MEMREV_VECTOR_SIZE)));
 #if __has_builtin(__builtin_shufflevector)
 #define REVERSE_VECTOR_FUNC(WIDTH) \
     static inline                                                             \
-    Vector ## WIDTH ReverseVector ## WIDTH(Vector ## WIDTH vec) {             \
+    Vector ## WIDTH ReverseVector(Vector ## WIDTH vec) {                      \
         return __builtin_shufflevector(vec, vec, REVERSE_MASK_ ## WIDTH);     \
     }
 #else
@@ -50,7 +50,7 @@ typedef uint64_t Vector64 __attribute__((vector_size(MEMREV_VECTOR_SIZE)));
 #elif defined(__GNUC__)
 #define REVERSE_VECTOR_FUNC(WIDTH) \
     static inline                                                             \
-    Vector ## WIDTH ReverseVector ## WIDTH(Vector ## WIDTH vec) {             \
+    Vector ## WIDTH ReverseVector(Vector ## WIDTH vec) {                      \
         const static Vector ## WIDTH mask = {REVERSE_MASK_ ## WIDTH};         \
         return __builtin_shuffle(vec, mask);                                  \
     }
