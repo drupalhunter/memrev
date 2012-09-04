@@ -16,12 +16,7 @@
 #ifndef MEMREV_VECTOR_H_
 #define MEMREV_VECTOR_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include <stddef.h>
-#include <stdint.h>
+#include <cstdint>
 
 #include "memrev.h"
 
@@ -36,25 +31,18 @@ typedef uint64_t Vector64 __attribute__((vector_size(MEMREV_VECTOR_SIZE)));
 #define REVERSE_MASK_64 1, 0
 
 #if defined(__clang__)
-#if __has_builtin(__builtin_shufflevector)
 #define REVERSE_VECTOR_FUNC(WIDTH) \
-    static inline                                                             \
-    Vector ## WIDTH ReverseVector(Vector ## WIDTH vec) {                      \
+    inline Vector ## WIDTH ReverseVector(Vector ## WIDTH vec) {               \
         return __builtin_shufflevector(vec, vec, REVERSE_MASK_ ## WIDTH);     \
     }
-#else
-#error "A version of clang with __builtin_shufflevector is required."
-#endif
 /* XXX: GCC's __builtin_shuffle is not enabled in C++ for some reason. */
 /*
 #elif defined(__GNUC__)
 #define REVERSE_VECTOR_FUNC(WIDTH) \
-    static inline                                                             \
-    Vector ## WIDTH ReverseVector(Vector ## WIDTH vec) {                      \
+    inline Vector ## WIDTH ReverseVector(Vector ## WIDTH vec) {               \
         const static Vector ## WIDTH mask = {REVERSE_MASK_ ## WIDTH};         \
         return __builtin_shuffle(vec, mask);                                  \
     }
-#endif
 */
 #else
 #error "Compiler not supported."
@@ -64,9 +52,5 @@ REVERSE_VECTOR_FUNC(8);
 REVERSE_VECTOR_FUNC(16);
 REVERSE_VECTOR_FUNC(32);
 REVERSE_VECTOR_FUNC(64);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* MEMREV_VECTOR_H_ */
