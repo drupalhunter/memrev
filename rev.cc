@@ -32,36 +32,33 @@ using namespace std;
 
 namespace {
 
-template<typename char_type>
-void write_reversed_lines(basic_istream<char_type>& input,
-                          const char* input_filename,
-                          basic_ostream<char_type>& output) {
+template<typename T>
+void WriteReversedLines(basic_istream<T>& input, const char* input_name,
+                        basic_ostream<T>& output) {
     while (true) {
-        basic_string<char_type> buffer;
+        basic_string<T> buffer;
         getline(input, buffer);
         if (input.fail() && !input.eof())
-            FATAL("error reading from " << input_filename);
+            FATAL("error reading from " << input_name);
 
-        memrev_reverse(&buffer[0], sizeof(char_type), buffer.length());
+        memrev_reverse(&buffer[0], sizeof(T), buffer.length());
         output << buffer;
-
         if (input.eof())
             break;
         output << endl;
     }
 }
 
-template<typename char_type>
-void write_reversed_lines(const char* filename,
-                          basic_ostream<char_type>& output) {
-    basic_ifstream<char_type> file(filename);
+template<typename T>
+void WriteReversedLines(const char* filename, basic_ostream<T>& output) {
+    basic_ifstream<T> file(filename);
     if (file.fail())
         FATAL("could not open file: " << filename);
-    write_reversed_lines(file, filename, output);
+    WriteReversedLines(file, filename, output);
     file.close();
 }
 
-void set_global_locale() {
+void SetGlobalLocale() {
     locale user_locale;
     try {
         user_locale = locale("");
@@ -83,7 +80,7 @@ void set_global_locale() {
     wclog.imbue(user_locale);
 }
 
-void usage() {
+void PrintUsage() {
     cerr <<
 "usage: rev [options] [file ...]\n"
 "\n"
@@ -95,7 +92,7 @@ void usage() {
 } // namespace
 
 int main(int argc, char** argv) {
-    set_global_locale();
+    SetGlobalLocale();
 
     bool use_wchar = true;
     static const struct option long_options[] = {
@@ -114,7 +111,7 @@ int main(int argc, char** argv) {
             break;
         case 'h':
         default:
-            usage();
+            PrintUsage();
             return EXIT_FAILURE;
         }
     }
@@ -123,15 +120,15 @@ int main(int argc, char** argv) {
 
     if (argc == 0) {
         if (use_wchar)
-            write_reversed_lines(wcin, "stdin", wcout);
+            WriteReversedLines(wcin, "stdin", wcout);
         else
-            write_reversed_lines(cin, "stdin", cout);
+            WriteReversedLines(cin, "stdin", cout);
     } else {
         for (int i = 0; i < argc; i++) {
             if (use_wchar)
-                write_reversed_lines(argv[i], wcout);
+                WriteReversedLines(argv[i], wcout);
             else
-                write_reversed_lines(argv[i], cout);
+                WriteReversedLines(argv[i], cout);
         }
     }
     return 0;
