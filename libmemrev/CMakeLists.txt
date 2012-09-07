@@ -23,7 +23,7 @@ if (MEMREV_USE_VECTOR)
 endif()
 
 include_directories(include)
-add_library (memrev src/memrev.cc)
+add_library(memrev src/memrev.cc)
 
 if (MEMREV_BUILD_TESTS)
     add_executable(memrev_test src/memrev_test.cc)
