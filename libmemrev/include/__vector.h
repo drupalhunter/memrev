@@ -20,10 +20,11 @@
 
 #include "memrev.h"
 
-typedef uint8_t  Vector8  __attribute__((vector_size(MEMREV_VECTOR_SIZE)));
-typedef uint16_t Vector16 __attribute__((vector_size(MEMREV_VECTOR_SIZE)));
-typedef uint32_t Vector32 __attribute__((vector_size(MEMREV_VECTOR_SIZE)));
-typedef uint64_t Vector64 __attribute__((vector_size(MEMREV_VECTOR_SIZE)));
+#define VECTOR_SIZE_ATTR __attribute__((vector_size(MEMREV_VECTOR_SIZE)))
+typedef uint8_t  Vector8  VECTOR_SIZE_ATTR;
+typedef uint16_t Vector16 VECTOR_SIZE_ATTR;
+typedef uint32_t Vector32 VECTOR_SIZE_ATTR;
+typedef uint64_t Vector64 VECTOR_SIZE_ATTR;
 
 #define REVERSE_MASK_8  15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0
 #define REVERSE_MASK_16 7, 6, 5, 4, 3, 2, 1, 0
@@ -35,15 +36,13 @@ typedef uint64_t Vector64 __attribute__((vector_size(MEMREV_VECTOR_SIZE)));
     inline Vector ## WIDTH ReverseVector(Vector ## WIDTH vec) {               \
         return __builtin_shufflevector(vec, vec, REVERSE_MASK_ ## WIDTH);     \
     }
-/* XXX: GCC's __builtin_shuffle is not enabled in C++ for some reason. */
-/*
+// XXX: GCC's __builtin_shuffle is not enabled in C++ for some reason.
 #elif defined(__GNUC__)
 #define REVERSE_VECTOR_FUNC(WIDTH) \
     inline Vector ## WIDTH ReverseVector(Vector ## WIDTH vec) {               \
         const static Vector ## WIDTH mask = {REVERSE_MASK_ ## WIDTH};         \
         return __builtin_shuffle(vec, mask);                                  \
     }
-*/
 #else
 #error "Compiler not supported."
 #endif
@@ -53,4 +52,4 @@ REVERSE_VECTOR_FUNC(16);
 REVERSE_VECTOR_FUNC(32);
 REVERSE_VECTOR_FUNC(64);
 
-#endif /* MEMREV_VECTOR_H_ */
+#endif // MEMREV_VECTOR_H_
