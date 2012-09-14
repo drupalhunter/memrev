@@ -55,7 +55,6 @@ void WriteReversedLines(const char* filename, basic_ostream<T>& output) {
     if (file.fail())
         FATAL("could not open file: " << filename);
     WriteReversedLines(file, filename, output);
-    file.close();
 }
 
 void SetGlobalLocale() {
